@@ -26,7 +26,7 @@ var line = d3.line()
     .y(function(d) { return y(d.num_vehicles_t); });
 
 // DATA-DRIVEN CODE ------------------------
-d3.csv("https://raw.githubusercontent.com/ebucodes/data-visualization-using-D3.js/main/data/test.csv", function(d) {
+d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-with-legend/master/line2.csv", function(d) {
     d.num_vehicles_t = +d.num_vehicles_t; // coerce to number
     d.time = +d.time; // coerce to number
     return d;
