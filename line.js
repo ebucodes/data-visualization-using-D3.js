@@ -4,7 +4,7 @@ function log(text) {
 }
 
 var t = d3.transition()
-    .duration(200);
+    .duration(500);
 
 var svg = d3.select("svg"),
     margin = { top: 20, right: 20, bottom: 50, left: 50 },
@@ -22,25 +22,25 @@ var chart = svg.append("g")
 
 // line generator
 var line = d3.line()
-    .x(function(d) { return x(d.time); })
-    .y(function(d) { return y(d.num_vehicles_t); });
+    .x(function(d) { return x(d.year); })
+    .y(function(d) { return y(d.deathsRate); });
 
 // DATA-DRIVEN CODE ------------------------
-d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-with-legend/master/line2.csv", function(d) {
-    d.num_vehicles_t = +d.num_vehicles_t; // coerce to number
-    d.time = +d.time; // coerce to number
+d3.csv("https://raw.githubusercontent.com/ebucodes/data-visualization-using-D3.js/main/data/suicide1.csv", function(d) {
+    d.deathsRate = +d.deathsRate; // coerce to number
+    d.year = +d.year; // coerce to number
     return d;
 }, function(error, data) {
     if (error) throw error;
 
     // nest arrays by each make/model so we can create separate series
     var nested = d3.nest()
-        .key(function(d) { return d.make_model; })
+        .key(function(d) { return d.country; })
         .entries(data);
 
     // set domains
-    x.domain(d3.extent(data, function(d) { return d.time; }));
-    y.domain(d3.extent(data, function(d) { return d.num_vehicles_t; }));
+    x.domain(d3.extent(data, function(d) { return d.year; }));
+    y.domain(d3.extent(data, function(d) { return d.deathsRate; }));
 
     // add line/label to mark date selected by user
     chart.append("line")
@@ -63,7 +63,7 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
         .attr("y", -20)
         .attr("dy", 11.5)
         .attr("text-anchor", "middle")
-        .text("30 Days");
+        .text("");
 
 
     // x-axis
@@ -77,7 +77,7 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
         .attr("y", height)
         .attr("dy", 30)
         .attr("text-anchor", "middle")
-        .text("Days from Today");
+        .text("Year");
 
     // y-axis
     chart.append("g")
@@ -89,7 +89,7 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
         .attr("dy", -30)
         .attr("transform", "rotate(-90)")
         .attr("text-anchor", "middle")
-        .text("# of Vehicles");
+        .text("Death Rate(Age standardized) ");
 
     // create group to hold all lines
     var lineGroup = chart.append("g")
@@ -100,9 +100,14 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
         .attr("class", "d3-tip")
         .offset([-10, 0])
         .html(function(d) {
-            return d.make_model + "<br>" +
-                "<b>" + d.time + " Days</b> from today<br>" +
-                "<b>" + d.num_vehicles_t + " vehicle(s)</b> in stock";
+            // return d.country + "as at" + d.year +
+            return d.country + " as at <b>" + d.year + "<hr></b>" +
+                "Suicide death rate of ages (All Ages):<b>" + d.deathsAllAges + "<hr></b>" +
+                "Suicide death rate of ages (70 years and above):<b>" + d.deaths1 + "<hr></b>" +
+                "Suicide death rate of ages (69 years - 50 years):<b>" + d.deaths2 + "<hr></b>" +
+                "Suicide death rate of ages (49 years - 15 years):<b>" + d.deaths3 + "<hr></b>" +
+                "Suicide death rate of ages (14 years - 5 years):<b>" + d.deaths4 + "<hr></b>" +
+                "Suicide death rate (Age standardized):<b>" + d.deathsRate + "</b>";
         });
 
     chart.call(tooltip);
@@ -122,7 +127,7 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
             .attr("class", "line")
             .attr("fill", "none")
             .attr("stroke", function() { return color(d.key); })
-            .attr("stroke-width", "1px")
+            .attr("stroke-width", "2px")
             .attr("d", line(d.values))
             .each(function(d) { this._current = d; });
 
@@ -133,8 +138,8 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
             .attr("class", "circle")
             .attr("fill", "white")
             .attr("stroke", function() { return color(d.key); })
-            .attr("cx", function(d) { return x(d.time); })
-            .attr("cy", function(d) { return y(d.num_vehicles_t); })
+            .attr("cx", function(d) { return x(d.year); })
+            .attr("cy", function(d) { return y(d.deathsRate); })
             .attr("r", 5);
 
         // white rect background for data labels (see next code block)
@@ -143,8 +148,8 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
             .enter().append("rect")
             .attr("width", 15)
             .attr("height", 10)
-            .attr("x", function(d) { return x(d.time) - 7.5; })
-            .attr("y", function(d) { return y(d.num_vehicles_t) - 18; })
+            .attr("x", function(d) { return x(d.year) - 7.5; })
+            .attr("y", function(d) { return y(d.deathsRate) - 18; })
             .attr("fill", "none");
 
         // data labels: hidden unless you hover over legend item
@@ -152,12 +157,12 @@ d3.csv("https://raw.githubusercontent.com/jeremyholcombe/d3-grouped-line-chart-w
             .data(d.values)
             .enter().append("text")
             .attr("class", "text data-label")
-            .attr("x", function(d) { return x(d.time); })
-            .attr("y", function(d) { return y(d.num_vehicles_t); })
+            .attr("x", function(d) { return x(d.year); })
+            .attr("y", function(d) { return y(d.deathsRate); })
             .attr("dy", -10)
             .attr("text-anchor", "middle")
             .attr("fill", "none")
-            .text(function(d) { return d.num_vehicles_t; });
+            // .text(function(d) { return d.deathsRate; });
 
     }); // END LINES AND CIRCLES
 
